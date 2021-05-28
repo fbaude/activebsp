@@ -1,0 +1,31 @@
+7c7,11
+< Spmd :: Spmd( int nprocs ) 
+---
+> Spmd :: Spmd( int nprocs )
+>     : Spmd(MPI_COMM_WORLD, nprocs) {}
+> 
+> Spmd :: Spmd(MPI_Comm subset, int nprocs )
+>     : m_subset(subset)
+14d17
+<     MPI_Bcast( &nprocs, 1, MPI_INT, 0, MPI_COMM_WORLD );
+16c19,21
+<     MPI_Comm_rank( MPI_COMM_WORLD, & world_pid );
+---
+>     MPI_Bcast( &nprocs, 1, MPI_INT, 0, m_subset );
+> 
+>     MPI_Comm_rank( m_subset, & world_pid );
+19c24
+<     MPI_Comm_split( MPI_COMM_WORLD, m_active, world_pid, &m_comm );
+---
+>     MPI_Comm_split( m_subset, m_active, world_pid, &m_comm );
+48c53
+<     MPI_Barrier( MPI_COMM_WORLD );
+---
+>     MPI_Barrier( m_subset );
+54c59,62
+<     MPI_Finalize();
+---
+>     if (m_subset == MPI_COMM_WORLD)
+>     {
+>         MPI_Finalize();
+>     }

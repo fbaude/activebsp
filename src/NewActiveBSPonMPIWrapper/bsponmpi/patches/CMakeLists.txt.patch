@@ -1,0 +1,42 @@
+82,83c82,83
+<         ${CMAKE_BINARY_DIR}/cmake 
+<         ${CMAKE_SOURCE_DIR}/cmake/has_tr1_unordered_map.cc)
+---
+>         ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+>         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/has_tr1_unordered_map.cc)
+86,87c86,87
+<         ${CMAKE_BINARY_DIR}/cmake
+<         ${CMAKE_SOURCE_DIR}/cmake/has_cxx11_unordered_map.cc)
+---
+>         ${CMAKE_CURRENT_SOURCE_DIR}/cmake
+>         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/has_cxx11_unordered_map.cc)
+128c128,136
+< enable_testing()
+---
+> # Variables can be set from above (e.g. from a different project)
+> # so that option command does not override them
+> cmake_policy(SET CMP0077 NEW)
+> 
+> option(BSPONMPI_ENABLE_TESTING "Enable tests" ON)
+> 
+> if (BSPONMPI_ENABLE_TESTING)
+>     enable_testing()
+> endif()
+196c204
+<     install( TARGETS ${name}
+---
+>     install( TARGETS ${name} EXPORT ${name}Config
+200a209,212
+> 
+>     install(EXPORT ${name}Config DESTINATION share/${name}/cmake)
+>     export(TARGETS ${name} FILE ${name}.cmake)
+> 
+223a236,238
+> install(FILES include/bsp_mpi_extension.h
+>         DESTINATION include )
+> 
+265a281
+> if (BSPONMPI_ENABLE_TESTING STREQUAL ON)
+412a429,430
+> endif()
+> 

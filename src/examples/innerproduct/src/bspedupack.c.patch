@@ -1,0 +1,32 @@
+2a3,17
+> void abort_str(const char * str)
+> {
+>     fprintf(stderr, "%s", str);
+>     fprintf(stderr,"\n");
+>     exit(1);
+> }
+> 
+> // BSPlib version not yet implemented
+> /*
+> void abort_str(const char * str)
+> {
+>     bsp_abort(str);
+> }
+> */
+> 
+16c31
+<             bsp_abort("vecallocd: not enough memory");
+---
+>             abort_str("vecallocd: not enough memory");
+31c46
+<             bsp_abort("vecalloci: not enough memory");
+---
+>             abort_str("vecalloci: not enough memory");
+47c62
+<             bsp_abort("matallocd: not enough memory");
+---
+>             abort_str("matallocd: not enough memory");
+54c69
+<                 bsp_abort("matallocd: not enough memory");
+---
+>                 abort_str("matallocd: not enough memory");

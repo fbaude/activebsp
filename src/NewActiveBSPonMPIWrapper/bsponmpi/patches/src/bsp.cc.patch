@@ -1,0 +1,68 @@
+16a17,18
+> #include "bsp_mpi_extension.h"
+> 
+29a32,33
+> static MPI_Comm s_subset = MPI_COMM_WORLD;
+> 
+61c65
+<             MPI_Abort( MPI_COMM_WORLD, EXIT_FAILURE );
+---
+>             MPI_Abort( s_subset, EXIT_FAILURE );
+63c67
+<         MPI_Abort( MPI_COMM_WORLD, EXIT_SUCCESS );
+---
+>         MPI_Abort( s_subset, EXIT_SUCCESS );
+91c95
+<                 MPI_Abort(MPI_COMM_WORLD, EXIT_SUCCESS );
+---
+>                 MPI_Abort(s_subset, EXIT_SUCCESS );
+110c114
+<         MPI_Abort(MPI_COMM_WORLD, 6 );
+---
+>         MPI_Abort(s_subset, 6 );
+114a119,123
+> void bsp_use_world_subset( MPI_Comm subset )
+> {
+>     s_subset = subset;
+> }
+> 
+131c140
+<     MPI_Comm_rank( MPI_COMM_WORLD, &pid );
+---
+>     MPI_Comm_rank( s_subset, &pid );
+134c143
+< 
+---
+>         /*
+139a149
+>         */
+143c153,154
+<         std::exit(EXIT_SUCCESS);
+---
+> 
+>         //std::exit(EXIT_SUCCESS);
+144a156
+> 
+157c169
+<     MPI_Comm_rank( MPI_COMM_WORLD, &mpi_pid );
+---
+>     MPI_Comm_rank( s_subset, &mpi_pid );
+166c178,179
+<     s_spmd = new bsplib::Spmd( maxprocs );
+---
+>     s_spmd = new bsplib::Spmd( s_subset, maxprocs );
+> 
+255a269,277
+> 
+>     int pid;
+>     MPI_Comm_rank( s_subset, &pid );
+> 
+>     if (pid == 0)
+>     {
+>         delete s_spmd;
+>         s_spmd = NULL;
+>     }
+273c295
+<         MPI_Comm_size( MPI_COMM_WORLD, &nprocs);
+---
+>         MPI_Comm_size( s_subset, &nprocs);

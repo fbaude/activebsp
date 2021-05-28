@@ -1,0 +1,4 @@
+16a17
+>     explicit Spmd( MPI_Comm subset, int nprocs ); // Collective
+43a45
+>     MPI_Comm m_subset;

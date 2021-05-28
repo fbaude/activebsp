@@ -1,0 +1,112 @@
+0a1,9
+> #include "InnerProductActor.h"
+> 
+> #include <iostream>
+> #include <vector>
+> 
+> #include <math.h>
+> 
+> extern "C"
+> {
+1a11,68
+> }
+> 
+> REGISTER_ACTOR(InnerProductActor)
+> 
+> using namespace std;
+> 
+> InnerProductActor::InnerProductActor() : activebsp::ActorBase()
+> {
+>     register_spmd(&InnerProductActor::spmd);
+>     register_spmd(&InnerProductActor::init_size);
+> 
+>     size_t tagsize = sizeof(int);
+>     bsp_set_tagsize(&tagsize);
+>     bsp_sync();
+> }
+> 
+> double InnerProductActor::f(std::vector <double> x, std::vector<double> y)
+> {
+>     x_p0 = &x[0];
+>     y_p0 = &y[0];
+> 
+>     n_p0 = x.size();
+> 
+>     bsp_run(&InnerProductActor::init_size);
+> 
+>     for (int i = 0; i < bsp_nprocs(); ++i)
+>     {
+>         int offset = n_part * i;
+>     
+>         bsp_put(i, x_p0 + offset, x_part, 0, n_part * sizeof(double));
+>         bsp_put(i, y_p0 + offset, y_part, 0, n_part * sizeof(double));
+>     }
+> 
+>     bsp_run(&InnerProductActor::spmd);
+> 
+>     return alpha;
+> }
+> 
+> void InnerProductActor::init_size()
+> {
+>     bsp_push_reg(&n_p0, sizeof(int));
+> 
+>     bsp_sync();
+> 
+>     bsp_get(0, &n_p0, 0, &n_p0, sizeof(int));
+> 
+>     bsp_sync();
+> 
+>     n_part = n_p0 / bsp_nprocs();
+> 
+>     x_part = vecallocd(n_part);
+>     y_part = vecallocd(n_part);
+> 
+>     bsp_push_reg(x_part, n_part);
+>     bsp_push_reg(y_part, n_part);
+> 
+>     bsp_sync();
+> }
+20c87,95
+< double bspip(int p, int s, int n, double *x, double *y){
+---
+> 
+> void InnerProductActor::spmd()
+> {
+>     bsp_sync();
+> 
+>     alpha = bspip(bsp_nprocs(), bsp_pid(), n_p0, x_part, y_part);
+> }
+> 
+> double InnerProductActor::bspip(int p, int s, int n, double *x, double *y){
+24c99
+<     double inprod, *Inprod, alpha;
+---
+>     double inprod, *Inprod;
+49,51c124,130
+< void bspinprod(){
+<     
+<     double bspip(int p, int s, int n, double *x, double *y);
+---
+> #define bsp_begin(x) /* empty */
+> #define bsp_end() /* empty */
+> 
+> int n;
+> 
+> void InnerProductActor::bspinprod(){
+> 
+54c133
+<     int p, s, n, nl, i, iglob;
+---
+>     int p, s, nl, i, iglob;
+58a138
+> #if 0
+64a145
+> #endif
+84a166,167
+>    /*The output should equal n*(n+1)*(2n+1)/6.*/
+>     assert( abs( alpha- (n*(n+1)*(2*n+1)/6)) < 0.001);
+96a180
+> #if 0
+115a200
+> #endif

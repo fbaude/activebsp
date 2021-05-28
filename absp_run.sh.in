@@ -1,0 +1,138 @@
+#!/bin/bash
+
+run_wrapper=@ABSP_RUNCMD@
+
+function usage ()
+{
+    echo "Usage : $0 [option...] cmd
+    
+Options:
+-h | --help
+Print this help message
+
+-N | --nodeconf \"node1,node2...:nprocs2:nprocspernode2 node3,node4...:nprocs2,nprocspernode2 ...\"
+Specify a list of nodes to use with slurm and the spreading of pids.
+One configuration is a triplet of node...:nprocs:nprocspernode
+There can be different configurations separated by a space, configurations have to be between \" so that they can be considered as a single argument
+
+-n | --nprocs
+Number of processors to use with the mpi command (only when not using -N)
+
+-s | --show
+Only print the commands to run
+
+"
+}
+
+if [ "$#" -lt 2 ]; then
+    usage
+    exit 1
+fi
+
+show="no"
+
+use_machinefile="no"
+
+nprocs_arg=
+machinefile_arg=
+
+run_wrapper_args=@ABSP_RUNARGS@
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -h|--help)
+    usage
+    exit 0
+    shift
+    ;;
+    -N|--nodeconf)
+    nodeconf=$2
+    use_machinefule="yes"
+    shift
+    shift
+    ;;
+    -s|--show)
+    show="yes"
+    shift
+    ;;
+    -n|--nprocs)
+    nprocs_arg="-n $2"
+    shift
+    shift
+    ;;
+    *)    # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift # past argument
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+cmd=$*
+
+if [ $use_machinefile = "yes" ]; then
+
+machinefile=machinefile
+allocnodelist=
+
+function alloc_nodes () {
+    nprocs=$1
+    nodelist=("${!2}")
+    procspernode=$3
+
+    to_allocate=$nprocs
+
+    for node in "${nodelist[@]}"
+    do
+        if [ $to_allocate -eq 0 ]; then
+            break;
+        fi
+
+        node_alloc=$procspernode
+        if [ $to_allocate -lt $node_alloc ]; then
+            node_alloc=$to_allocate
+        fi
+        
+        echo "$node:$node_alloc" >> $machinefile
+        allocnodelist="$allocnodelist,$node"
+
+        to_allocate=$(( $to_allocate - $node_alloc ))
+    done
+
+}
+
+> machinefile
+
+IFS=' ' read -ra objconfigs <<< "$nodeconf"
+for objconf in "${objconfigs[@]}"; do
+    echo "$objconf"
+    IFS=':' read -ra confitem <<< "$objconf"
+    nodes="${confitem[0]}"
+    nprocs="${confitem[1]}"
+    nprocspernode="${confitem[2]}"
+
+    IFS=',' read -ra availobjnodes <<< "$nodes"
+    alloc_nodes $nprocs availobjnodes[@] $nprocspernode
+done
+
+allocnodelist=${allocnodelist:1}
+
+machinefile_arg="-machinefile $machinefile"
+
+echo "allocnodelist : $allocnodelist"
+
+fi
+
+run_cmd="$run_wrapper $run_wrapper_args $machinefile_arg $nprocs_arg $cmd"
+
+if [ $show = "yes" ]; then
+    echo $run_cmd
+else
+    $run_cmd
+fi
+
+

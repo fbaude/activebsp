@@ -1,0 +1,43 @@
+DESCRIPTION
+
+C++ library implementing the BSP active object model on MPI.
+Allows the creation of multi-process active objects by attaching MPI processes to a created active object.
+The active objects communicate through method call and futures.
+BSP active objects allow the parallel processing of requests through BSPlib.
+
+More information on : https://lecpie.github.io/thesis-Leca.pdf
+
+This code uses BSPedupack 1.02, BSPonMPI v1.1, and Google Testing Framework,
+which are all differently licensed. For that reason, they are not included in
+this package and must be downloaded separately. The bootstrap.sh script will
+automatically try to download them and patch them accordingly. If it does not
+work, this should be done manually. See the bootstrap script on how to do that.
+
+REQUIREMENTS
+
+- CMake 3.13 or newer
+- an MPI implementation
+- Boost C++ Library 1.58 or newer (serialization, MPL)
+- a pthread implementation
+- libjpeg for the imgproc example (could be made optional)
+
+BUILD
+#From this directory, run bootstrap (with -h to see options)
+./bootstrap.sh
+
+#Go to build directory that was created by bootstrap
+cd build
+
+#Run make (with multicore options if needed)
+make
+
+RUN TESTS
+
+ctest
+
+EXECUTE PROVIDED EXAMPLES
+
+#absp_run is a wrapper for running absp programs, use with -h to see options
+./absp_run.sh -n $nprocs $binary
+
+
